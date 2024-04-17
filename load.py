@@ -49,7 +49,8 @@ def save_data(data, batch_size=20):
 
 
 def main():
-    directory = '../emb_amz_uk'
+    # directory = '../data/emb_amz_uk'
+    directory = '../data/emb_amz_uk'
     files = os.listdir(directory)
     count = 0
 
