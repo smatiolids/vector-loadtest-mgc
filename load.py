@@ -9,7 +9,7 @@ import time
 load_dotenv()
 
 session = getCQLSession(os.environ["MODE"])
-table = "default_keyspace.product_catalog_emb"
+table = "demo.product_catalog_emb"
 
 cmd_insert = f"""
 INSERT INTO {table} (id, title, emb)

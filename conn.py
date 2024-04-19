@@ -5,6 +5,22 @@ from cassandra.cluster import (
 )
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.query import dict_factory
+from cassandra.cluster import Cluster, ExecutionProfile, EXEC_PROFILE_DEFAULT
+from cassandra.policies import WhiteListRoundRobinPolicy, DowngradingConsistencyRetryPolicy
+from cassandra.query import tuple_factory
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
+from cassandra.policies import AddressTranslator
+
+
+class StaticTranslator(AddressTranslator):
+    """
+    Returns the endpoint with no translation
+    """
+
+    def translate(self, addr):
+        return "127.0.0.1"
+
 
 def getCQLSession(mode='astra_db'):
     print('Initializing CQL Session')
@@ -23,8 +39,23 @@ def getCQLSession(mode='astra_db'):
         print('Connected')
         return astraSession
     elif mode == 'dse':
-        cluster = Cluster(os.environ["DSE_NODES"].split(','), auth_provider=PlainTextAuthProvider(
-        username=os.environ["DSE_USER"], password=os.environ['DSE_PASS']))
+        print(os.environ["DSE_NODES"])
+        print(os.environ["DSE_USER"])
+        print(os.environ["DSE_PASS"])
+
+        profile = ExecutionProfile(
+            load_balancing_policy=WhiteListRoundRobinPolicy(['127.0.0.1']),
+            request_timeout=15,
+        )
+        address_translator = StaticTranslator()
+
+        auth_provider = PlainTextAuthProvider(
+            username=os.environ["DSE_USER"], password=os.environ['DSE_PASS'])
+
+        cluster = Cluster(os.environ["DSE_NODES"].split(','),
+                          address_translator=address_translator,
+                          connect_timeout=30,
+                          auth_provider=auth_provider)
         dseSession = cluster.connect()
         return dseSession
     elif mode == 'local':
